@@ -1,0 +1,12 @@
+A simple experment with Lamport clocks.
+
+-multiple threads exchange messages through a shared bounded buffer, and execute a fixed number of iterations
+-Threads alternate between internal events and sending/receiving messages to increment the logical clock
+-Random sleep periods ensure we get very non-deterministic behaviour
+-Threads can't consume message that they sent.
+
+Threads complete and print out the order of events thay see locally. 
+
+1) Run this code and see if you can confirm that it implements the Lamport CLocks algorithm correctly.
+2) Add a post processing step taht takes the events from each of the 3 threads and prints them out in maybe 3 columns, in the order that they occurred.
+3) Modify this code to implement Vectoc Clocks

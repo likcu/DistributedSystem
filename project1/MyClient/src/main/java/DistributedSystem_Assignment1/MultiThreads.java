@@ -29,11 +29,11 @@ public class MultiThreads {
   }
   public void process() throws InterruptedException{
     SingleThread[] threads = new SingleThread[numThreads];
-    Client client = ClientBuilder.newClient(new ClientConfig());
-    WebTarget target = client.target(url);
+    //Client client = ClientBuilder.newClient(new ClientConfig());
+    //WebTarget target = client.target(url);
     ExecutorService executor = Executors.newFixedThreadPool(numThreads);
     for(int i = 0; i < numThreads; i++) {
-      threads[i] = new SingleThread(url, 100, target);
+      threads[i] = new SingleThread(url, 100);
       executor.submit(threads[i]);
     }
     executor.shutdown();
@@ -43,7 +43,6 @@ public class MultiThreads {
       totalRequest += myThread.request;
       totalLatency += myThread.totalLatency;
       latency.addAll(myThread.latency);
-    };
-
+    }
   }
 }

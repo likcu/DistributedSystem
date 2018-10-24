@@ -1,5 +1,6 @@
 package DistributedSystem_Assignment1;
 
+import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.JerseyWebTarget;
 
 import java.security.Timestamp;
@@ -9,10 +10,10 @@ import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
@@ -27,12 +28,14 @@ public class SingleThread implements Runnable{
     public long totalLatency;
     public int request;
     public int successRequest;
+    public Client client;
     public WebTarget webTarget;
 
-    public SingleThread(String url,Integer iteration,WebTarget target){
+    public SingleThread(String url,Integer iteration){
         this.url = url;
         this.iteration = iteration;
-        this.webTarget = target;
+        this.client = ClientBuilder.newClient();
+        this.webTarget = client.target(url);
         request = 0;
         successRequest = 0;
         latency = new LinkedList<>();
@@ -64,39 +67,57 @@ public class SingleThread implements Runnable{
      */
     @Override
     public void run() {
-        Invocation.Builder ib = webTarget.request(MediaType.TEXT_PLAIN);
+
+        //Invocation.Builder ib = webTarget.request(MediaType.TEXT_PLAIN);
+
         for(int i = 0; i < iteration; i++) {
-            Long start = System.currentTimeMillis();
-            post(ib);
-            Long end = System.currentTimeMillis();
-            Long dif = end - start;
-            latency.add(dif);
-          //  System.out.println("singleLatency:"+dif);
-            totalLatency += dif;
+            //long start = System.currentTimeMillis();
+            post();
+            //long end = System.currentTimeMillis();
+            //long dif = end - start;
+            //latency.add(dif);
+            //totalLatency += dif;
         }
-        Invocation.Builder ib1 = webTarget.request(MediaType.TEXT_PLAIN);
+        //Invocation.Builder ib1 = webTarget.request(MediaType.TEXT_PLAIN);
         for(int i = 0; i < iteration; i++) {
-            Long start = System.currentTimeMillis();
-            get(ib1);
-            Long end = System.currentTimeMillis();
-            Long dif = end - start;
-            latency.add(dif);
+            //long start = System.currentTimeMillis();
+            get();
+            //long end = System.currentTimeMillis();
+            //long dif = end - start;
+            //latency.add(dif);
          //   System.out.println("singleGetLatency:"+dif);
-            totalLatency += dif;
+            //totalLatency += dif;
         }
     }
 
-    public void post(Invocation.Builder ib){
-        Response response = ib.post(Entity.entity("123", MediaType.TEXT_PLAIN));
+    public void post(){
+        long start = System.currentTimeMillis();
+        Response response = webTarget.request().post(Entity.entity("123", MediaType.TEXT_PLAIN));
         int status = response.getStatus();
-        if(status == 200) successRequest++;
+        long end = System.currentTimeMillis();
+        long dif = end - start;
+        if(status == 200) {
+            successRequest++;
+            System.out.println(dif);
+            latency.add(dif);
+            totalLatency += dif;
+        }
         request++;
+        //System.out.println("threadId:"+Thread.currentThread().getId());
         response.close();
     }
-    public void get(Invocation.Builder ib){
-        Response response = ib.get();
+    public void get(){
+        long start = System.currentTimeMillis();
+        Response response = webTarget.request().get();
         int status = response.getStatus();
-        if(status == 200) successRequest++;
+        long end = System.currentTimeMillis();
+        long dif = end - start;
+        if(status == 200) {
+            successRequest++;
+            System.out.println(dif);
+            latency.add(dif);
+            totalLatency += dif;
+        }
         request++;
         response.close();
     }
