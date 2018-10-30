@@ -1,6 +1,5 @@
 package socketexamples.bsds.edu;
 
-import threadsexamples.bsds.edu.ActiveCount;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -29,7 +28,7 @@ class SocketHandlerThread extends Thread {
       
       String clientID = in.readLine();
       System.out.println("Client ID is :" + clientID);
-      out.println("Active Server Thread Count = " + Integer.toString( threadCount.getCount() ));
+      out.println("Active Server Thread Count = " + Integer.toString(threadCount.getCount() ));
       out.flush();    
       System.out.println("Reply sent");
       

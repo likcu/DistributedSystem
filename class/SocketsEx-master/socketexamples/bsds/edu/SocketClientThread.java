@@ -6,8 +6,11 @@ package socketexamples.bsds.edu;
  */
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -26,16 +29,23 @@ public class SocketClientThread extends Thread {
     public SocketClientThread(String hostName, int port, CyclicBarrier barrier) {
         this.hostName = hostName;
         this.port = port;
-        clientID = Thread.currentThread().getId();
         synk = barrier;
     }
     
     public void run() {
         
+        clientID = Thread.currentThread().getId();
+        
         try {
             // TO DO insert code to pass 10k messages to the SocketServer
-            Socket s = new Socket(hostName, port);
-           
+            for(int i = 0; i < 10; i++){
+                Socket s = new Socket(hostName, port);
+                PrintWriter out = new PrintWriter(s.getOutputStream(),true);
+                out.println("current client ID is " + Long.toString(clientID));
+                BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                System.out.println(in.readLine());
+                s.close();
+            }
         
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host " + hostName);
@@ -47,6 +57,12 @@ public class SocketClientThread extends Thread {
         } 
         
         // insert code to wait on the CyclicBarrier
-        
+//        try {
+//            synk.await();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (BrokenBarrierException e) {
+//            e.printStackTrace();
+//        }
     }
 }
