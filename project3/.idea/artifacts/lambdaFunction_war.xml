@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="lambdaFunction:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="proj3.war">
+      <element id="artifact" artifact-name="lambdaFunction:war exploded" />
+    </root>
+  </artifact>
+</component>

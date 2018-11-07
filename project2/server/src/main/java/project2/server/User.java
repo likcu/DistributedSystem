@@ -10,7 +10,9 @@ import javax.persistence.Table;
 public class User {
   @Id
   @GeneratedValue
-  private Integer id;
+  private Integer chartId;
+
+  private Integer userId;
   private Integer day;
   private Integer timeInterval;
   private Integer stepCount;
@@ -18,8 +20,20 @@ public class User {
   public User() {
   }
 
-  public Integer getId() {
-    return id;
+  public Integer getChartId() {
+    return chartId;
+  }
+
+  public void setChartId(Integer chartId) {
+    this.chartId = chartId;
+  }
+
+  public Integer getUserId() {
+    return userId;
+  }
+
+  public void setUserId(Integer userId) {
+    this.userId = userId;
   }
 
   public Integer getDay() {
@@ -32,10 +46,6 @@ public class User {
 
   public Integer getStepCount() {
     return stepCount;
-  }
-
-  public void setId(Integer id) {
-    this.id = id;
   }
 
   public void setDay(Integer day) {

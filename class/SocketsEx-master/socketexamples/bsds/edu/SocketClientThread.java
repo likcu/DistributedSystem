@@ -57,12 +57,12 @@ public class SocketClientThread extends Thread {
         } 
         
         // insert code to wait on the CyclicBarrier
-//        try {
-//            synk.await();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } catch (BrokenBarrierException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            synk.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (BrokenBarrierException e) {
+            e.printStackTrace();
+        }
     }
 }

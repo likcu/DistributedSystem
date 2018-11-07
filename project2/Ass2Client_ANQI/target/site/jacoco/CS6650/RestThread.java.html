@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>RestThread.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Assignment for class CS5004</a> &gt; <a href="index.source.html" class="el_package">CS6650</a> &gt; <span class="el_source">RestThread.java</span></div><h1>RestThread.java</h1><pre class="source lang-java linenums">package CS6650;
+
+import javax.ws.rs.client.*;
+import javax.ws.rs.core.*;
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class RestThread implements Runnable {
+  private String REST_URI;
+  private Client client;
+  private WebTarget webTarget;
+  private ArgumentParser argumentParser;
+  private CountDownLatch latch;
+  private int intervalStart;
+  private int intervalEnd;
+  private Statistics statistics;
+
+
+  public RestThread(String REST_URI, Client client, WebTarget webTarget,
+                    CountDownLatch latch, int intervalStart, int intervalEnd,
+<span class="nc" id="L22">                    ArgumentParser argumentParser, Statistics statistics) throws IOException {</span>
+<span class="nc" id="L23">    this.REST_URI = REST_URI;</span>
+<span class="nc" id="L24">    this.client = client;</span>
+<span class="nc" id="L25">    this.webTarget = client.target(this.REST_URI);</span>
+<span class="nc" id="L26">    this.argumentParser = argumentParser;</span>
+<span class="nc" id="L27">    this.latch = latch;</span>
+<span class="nc" id="L28">    this.intervalStart = intervalStart;</span>
+<span class="nc" id="L29">    this.intervalEnd = intervalEnd;</span>
+<span class="nc" id="L30">    this.statistics = statistics;</span>
+<span class="nc" id="L31">  }</span>
+
+  @Override
+  public void run() {
+//    System.out.println(&quot;threadId :&quot; + Thread.currentThread().getId());
+<span class="nc" id="L36">    int interval = this.intervalEnd - this.intervalStart;</span>
+<span class="nc" id="L37">    int intervalMin = this.intervalStart;</span>
+<span class="nc" id="L38">    int numOfIterations = argumentParser.testsPerPhase * interval;</span>
+<span class="nc" id="L39">    int[] userId = new int[3];</span>
+<span class="nc" id="L40">    int[] timeInterval = new int[3];</span>
+<span class="nc" id="L41">    int[] stepCount = new int[3];</span>
+<span class="nc" id="L42">    long currentCount = latch.getCount();</span>
+<span class="nc" id="L43">    long start = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">    for (int i = 0; i &lt; numOfIterations; i++) {</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">      for (int j = 0; j &lt; 3; j++) {</span>
+<span class="nc" id="L46">        userId[j] = ThreadLocalRandom.current().nextInt(argumentParser.population);</span>
+<span class="nc" id="L47">        timeInterval[j] = ThreadLocalRandom.current().nextInt(interval) + intervalMin;</span>
+<span class="nc" id="L48">        stepCount[j] = ThreadLocalRandom.current().nextInt(Constants.stepCount);</span>
+      }
+
+<span class="nc" id="L51">      int day = ThreadLocalRandom.current().nextInt(argumentParser.dayNum);</span>
+      try {
+<span class="nc" id="L53">        sendPostRequest(userId[0], day, timeInterval[0], stepCount[0]);</span>
+<span class="nc" id="L54">      } catch (IOException e) {</span>
+<span class="nc" id="L55">        e.printStackTrace();</span>
+<span class="nc" id="L56">      }</span>
+      try {
+<span class="nc" id="L58">        sendPostRequest(userId[1], day, timeInterval[1], stepCount[1]);</span>
+<span class="nc" id="L59">      } catch (IOException e) {</span>
+<span class="nc" id="L60">        e.printStackTrace();</span>
+<span class="nc" id="L61">      }</span>
+      try {
+<span class="nc" id="L63">        sendGetCurrentRequest(userId[0]);</span>
+<span class="nc" id="L64">      } catch (IOException e) {</span>
+<span class="nc" id="L65">        e.printStackTrace();</span>
+<span class="nc" id="L66">      }</span>
+      try {
+<span class="nc" id="L68">        sendGetSingleRequest(userId[1], day);</span>
+<span class="nc" id="L69">      } catch (IOException e) {</span>
+<span class="nc" id="L70">        e.printStackTrace();</span>
+<span class="nc" id="L71">      }</span>
+      try {
+<span class="nc" id="L73">        sendPostRequest(userId[2], day, timeInterval[2], stepCount[2]);</span>
+<span class="nc" id="L74">      } catch (IOException e) {</span>
+<span class="nc" id="L75">        e.printStackTrace();</span>
+<span class="nc" id="L76">      }</span>
+    }
+<span class="nc" id="L78">    latch.countDown();</span>
+
+<span class="nc" id="L80">    System.out.println(&quot;currentcount: &quot; + currentCount);</span>
+<span class="nc" id="L81">    currentCount = latch.getCount();</span>
+<span class="nc" id="L82">    System.out.println(&quot;currentcount: &quot; + currentCount);</span>
+<span class="nc" id="L83">    System.out.println(&quot;single thread run time: &quot; + (System.currentTimeMillis() - start) + &quot; ms&quot;);</span>
+<span class="nc" id="L84">  }</span>
+
+  //    System.out.println(&quot;success request per thread: &quot; + this.successRequest);
+
+  private void sendGetCurrentRequest(int userId) throws IOException {
+<span class="nc" id="L89">    long latency = -1;</span>
+<span class="nc" id="L90">    long startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L91">    Response response = webTarget.path(&quot;current/&quot; + userId).</span>
+<span class="nc" id="L92">        request(javax.ws.rs.core.MediaType.TEXT_PLAIN).get(Response.class);</span>
+<span class="nc" id="L93">    int status = response.getStatus();</span>
+<span class="nc" id="L94">    long endTime = System.currentTimeMillis();</span>
+
+    // DEBUG
+<span class="nc" id="L97">    String output = response.readEntity(String.class);</span>
+<span class="nc" id="L98">    System.out.println(&quot;sendGetCurrentRequest: &quot; + output + &quot;. using: &quot; + (endTime - startTime));</span>
+
+<span class="nc" id="L100">    int requestSuccess = 0;</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">    if (status == 200) {</span>
+<span class="nc" id="L102">      latency = endTime - startTime;</span>
+<span class="nc" id="L103">      requestSuccess++;</span>
+    }
+<span class="nc" id="L105">    response.close();</span>
+
+//    System.out.println(&quot;latency: &quot; + latency);
+<span class="nc" id="L108">    this.addToStats(startTime, endTime, requestSuccess);</span>
+<span class="nc" id="L109">  }</span>
+
+  private void sendGetSingleRequest(int userId, int day) throws IOException {
+<span class="nc" id="L112">    long latency = -1;</span>
+<span class="nc" id="L113">    long startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L114">    Response response = webTarget.path(&quot;single/&quot; + userId + &quot;/&quot; + day).</span>
+<span class="nc" id="L115">        request(javax.ws.rs.core.MediaType.TEXT_PLAIN).get(Response.class);</span>
+<span class="nc" id="L116">    int status = response.getStatus();</span>
+<span class="nc" id="L117">    long endTime = System.currentTimeMillis();</span>
+
+    // DEBUG
+<span class="nc" id="L120">    String output = response.readEntity(String.class);</span>
+<span class="nc" id="L121">    System.out.println(&quot;sendGetSingleRequest: &quot; + output + &quot;. using &quot; + (endTime - startTime));</span>
+
+<span class="nc" id="L123">    int requestSuccess = 0;</span>
+
+<span class="nc bnc" id="L125" title="All 2 branches missed.">    if (status == 200) {</span>
+//      latency = endTime - startTime;
+<span class="nc" id="L127">      requestSuccess++;</span>
+    }
+<span class="nc" id="L129">    response.close();</span>
+<span class="nc" id="L130">    this.addToStats(startTime, endTime, requestSuccess);</span>
+<span class="nc" id="L131">  }</span>
+
+  private void sendPostRequest(int userId, int day, int timeInterval, int stepCount) throws IOException {
+<span class="nc" id="L134">    long latency = -1;</span>
+<span class="nc" id="L135">    long startTime = System.currentTimeMillis();</span>
+
+<span class="nc" id="L137">    Response response = webTarget</span>
+<span class="nc" id="L138">        .path(&quot;post/&quot; + userId + &quot;/&quot; + day + &quot;/&quot; + timeInterval + &quot;/&quot; + stepCount)</span>
+<span class="nc" id="L139">        .request(javax.ws.rs.core.MediaType.TEXT_PLAIN)</span>
+<span class="nc" id="L140">        .post(Entity.entity(&quot;TEST&quot;, MediaType.TEXT_PLAIN_TYPE), Response.class);</span>
+
+<span class="nc" id="L142">    int status = response.getStatus();</span>
+<span class="nc" id="L143">    long endTime = System.currentTimeMillis();</span>
+
+    // DEBUG
+<span class="nc" id="L146">    String output = response.readEntity(String.class);</span>
+<span class="nc" id="L147">    System.out.println(&quot;output: &quot; + output + &quot;using: &quot; + (endTime - startTime));</span>
+
+<span class="nc" id="L149">    int requestSuccess = 0;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">    if (status == 200) {</span>
+<span class="nc" id="L151">      latency = (endTime - startTime);</span>
+<span class="nc" id="L152">      requestSuccess++;</span>
+    }
+<span class="nc" id="L154">    response.close();</span>
+<span class="nc" id="L155">    this.addToStats(startTime, endTime, requestSuccess);</span>
+<span class="nc" id="L156">  }</span>
+
+  public void addToStats(long startTime, long endTime, int requestSuccess) throws IOException {
+<span class="nc" id="L159">    int requestEndTime = (int) ((endTime - statistics.globalStartTime) / 1000);</span>
+<span class="nc" id="L160">    statistics.map.putIfAbsent(requestEndTime, 1);</span>
+<span class="nc" id="L161">    statistics.map.put(requestEndTime, statistics.map.get(requestEndTime) + 1);</span>
+<span class="nc" id="L162">    statistics.latencies.add(endTime - startTime);</span>
+<span class="nc" id="L163">    statistics.requestSent.addAndGet(1);</span>
+<span class="nc" id="L164">    statistics.requestSuccess.addAndGet(requestSuccess);</span>
+<span class="nc" id="L165">    CsvGenerator csvGenerator = new CsvGenerator();</span>
+<span class="nc" id="L166">    csvGenerator.writeFile(statistics.map);</span>
+<span class="nc" id="L167">  }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

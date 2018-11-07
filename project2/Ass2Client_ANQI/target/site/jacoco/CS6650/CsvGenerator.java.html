@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CsvGenerator.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Assignment for class CS5004</a> &gt; <a href="index.source.html" class="el_package">CS6650</a> &gt; <span class="el_source">CsvGenerator.java</span></div><h1>CsvGenerator.java</h1><pre class="source lang-java linenums">package CS6650;
+
+import java.io.FileWriter;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class CsvGenerator {
+
+<span class="nc" id="L9">  public CsvGenerator() {</span>
+<span class="nc" id="L10">  }</span>
+
+   void writeFile(ConcurrentHashMap&lt;Integer, Integer&gt; map) {
+<span class="nc" id="L13">    String file = &quot;/Users/anqibi/documents/github/cs6650/cs6650/assignment2/metrics.csv&quot;;</span>
+<span class="nc" id="L14">    FileWriter fileWriter = null;</span>
+    try {
+<span class="nc" id="L16">      fileWriter = new FileWriter(file); // throw I/O Exception</span>
+<span class="nc" id="L17">      fileWriter.append(&quot;Time(Second),NumberOfRequests(Times)\r\n&quot;);</span>
+<span class="nc bnc" id="L18" title="All 2 branches missed.">      for (Map.Entry&lt;Integer, Integer&gt; entry : map.entrySet()) {</span>
+<span class="nc" id="L19">        Integer second = entry.getKey();</span>
+<span class="nc" id="L20">        Integer requestNum = entry.getValue();</span>
+<span class="nc" id="L21">        fileWriter.append(String.valueOf(second)).append(&quot;,&quot;).append(String.valueOf(requestNum)).append(&quot;\r\n&quot;);</span>
+
+<span class="nc" id="L23">      }</span>
+<span class="nc" id="L24">    } catch (Exception ex) {</span>
+<span class="nc" id="L25">      System.out.println(&quot;[Reporter] File Writer Failure&quot; + ex);</span>
+    } finally {
+<span class="nc" id="L27">      try {</span>
+<span class="nc" id="L28">        fileWriter.flush();</span>
+<span class="nc" id="L29">        fileWriter.close();</span>
+<span class="nc" id="L30">      } catch (Exception ex) {</span>
+<span class="nc" id="L31">        ex.printStackTrace();</span>
+<span class="nc" id="L32">      }</span>
+<span class="nc" id="L33">    }</span>
+<span class="nc" id="L34">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

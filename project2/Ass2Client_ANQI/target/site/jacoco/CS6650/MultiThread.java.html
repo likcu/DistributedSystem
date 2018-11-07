@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>MultiThread.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Assignment for class CS5004</a> &gt; <a href="index.source.html" class="el_package">CS6650</a> &gt; <span class="el_source">MultiThread.java</span></div><h1>MultiThread.java</h1><pre class="source lang-java linenums">package CS6650;
+
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.grizzly.connector.GrizzlyConnectorProvider;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import java.io.IOException;
+import java.util.concurrent.*;
+
+public class MultiThread {
+  private int maxOfThreads;
+  private String REST_URI;
+  private Client client;
+  private WebTarget webTarget;
+  private ArgumentParser argumentParser;
+  private Statistics statistics;
+
+  public MultiThread(int maxOfThreads, String REST_URI, ArgumentParser argumentParser,
+<span class="nc" id="L21">                     Statistics statistics) {</span>
+<span class="nc" id="L22">    this.maxOfThreads = maxOfThreads;</span>
+<span class="nc" id="L23">    this.REST_URI = REST_URI;</span>
+<span class="nc" id="L24">    this.client = ClientBuilder.newClient();</span>
+<span class="nc" id="L25">    this.webTarget = client.target(this.REST_URI);</span>
+<span class="nc" id="L26">    this.argumentParser = argumentParser;</span>
+<span class="nc" id="L27">    this.statistics = statistics;</span>
+<span class="nc" id="L28">  }</span>
+
+  public void executeFourPhases() throws InterruptedException, IOException {
+<span class="nc" id="L31">    String[] phases = new String[]{&quot;Warm up&quot;, &quot;Loading&quot;, &quot;Peak&quot;, &quot;CoolDown&quot;};</span>
+<span class="nc" id="L32">    int[][] intervals = new int[][]{new int[]{0, 2}, new int[]{3, 7}, new int[]{8, 18}, new int[]{19, 23}};</span>
+<span class="nc" id="L33">    int warmUpThreadsNum = (int) (maxOfThreads * Constants.WARMUP_PHASE);</span>
+<span class="nc" id="L34">    int loadingThreadsNum = (int) (maxOfThreads * Constants.LOADING_PHASE);</span>
+<span class="nc" id="L35">    int peakThreadsNum = (int) (maxOfThreads * Constants.PEAK_PHASE);</span>
+<span class="nc" id="L36">    int coolDownThreadsNum = (int) (maxOfThreads * Constants.COOLDOWN_PHASE);</span>
+
+    // Warm up Phase
+<span class="nc" id="L39">    long totalStartTime = System.currentTimeMillis();</span>
+<span class="nc" id="L40">    CountDownLatch latch = new CountDownLatch((int) (warmUpThreadsNum * Constants.OVERLAPRATIO));</span>
+<span class="nc" id="L41">    System.out.println(&quot;WARM UP Phase started with countdown as &quot; + (int) (warmUpThreadsNum * Constants.OVERLAPRATIO));</span>
+<span class="nc" id="L42">    startPerPhase(phases[0], this.client, this.webTarget, warmUpThreadsNum, latch, intervals[0][0], intervals[0][1]);</span>
+<span class="nc" id="L43">    latch.await();</span>
+<span class="nc" id="L44">    System.out.println(&quot;WARM UP Phase finished.&quot;);</span>
+
+    // Loading Phase
+<span class="nc" id="L47">    latch = new CountDownLatch((int) (loadingThreadsNum * Constants.OVERLAPRATIO));</span>
+<span class="nc" id="L48">    System.out.println(&quot;LOADING Phase started with countdown as &quot; + (int) (loadingThreadsNum * Constants.OVERLAPRATIO));</span>
+<span class="nc" id="L49">    startPerPhase(phases[1], this.client, this.webTarget, loadingThreadsNum, latch, intervals[1][0], intervals[1][1]);</span>
+<span class="nc" id="L50">    latch.await();</span>
+<span class="nc" id="L51">    System.out.println(&quot;LOADING Phase finished&quot;);</span>
+
+    // Peak Phase
+<span class="nc" id="L54">    latch = new CountDownLatch((int) (peakThreadsNum * Constants.OVERLAPRATIO));</span>
+<span class="nc" id="L55">    System.out.println(&quot;PEAK Phase started with countdown as &quot; + (int) (peakThreadsNum * Constants.OVERLAPRATIO));</span>
+<span class="nc" id="L56">    startPerPhase(phases[2], this.client, this.webTarget, peakThreadsNum, latch, intervals[2][0], intervals[2][1]);</span>
+<span class="nc" id="L57">    latch.await();</span>
+<span class="nc" id="L58">    System.out.println(&quot;PEAK Phase finished&quot;);</span>
+
+    // Cool down Phase
+<span class="nc" id="L61">    latch = new CountDownLatch(coolDownThreadsNum);</span>
+<span class="nc" id="L62">    System.out.println(&quot;COOL DOWN Phase started with countdown as &quot; + coolDownThreadsNum);</span>
+<span class="nc" id="L63">    startPerPhase(phases[3], this.client, this.webTarget, coolDownThreadsNum, latch, intervals[3][0], intervals[3][1]);</span>
+<span class="nc" id="L64">    latch.await();</span>
+<span class="nc" id="L65">    System.out.println(&quot;COOL DOWN Phase finished&quot;);</span>
+<span class="nc" id="L66">    long totalEndTime = System.currentTimeMillis();</span>
+
+<span class="nc" id="L68">    statistics.results[0] = statistics.requestSent.intValue();</span>
+<span class="nc" id="L69">    statistics.results[1] = statistics.requestSuccess.intValue();</span>
+<span class="nc" id="L70">    statistics.results[2] = (totalEndTime - totalStartTime)/1000; // wall time</span>
+<span class="nc" id="L71">  }</span>
+
+  public void startPerPhase(String phase, Client client, WebTarget webTarget, int numOfthreads,
+                            CountDownLatch latch, int intervalStart, int intervalEnd)
+      throws InterruptedException, IOException {
+<span class="nc" id="L76">    System.out.println(phase + &quot; phase: All &quot; + numOfthreads + &quot; threads running ….&quot;);</span>
+<span class="nc" id="L77">    long startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L78">    long endTime = executeMultiThreads(REST_URI, client, webTarget, numOfthreads, latch, intervalStart, intervalEnd);</span>
+<span class="nc" id="L79">    System.out.println(phase + &quot; phase complete: Time: &quot; + (endTime - startTime) + &quot;ms&quot;);</span>
+<span class="nc" id="L80">  }</span>
+
+
+  private long executeMultiThreads(String REST_URI, Client client, WebTarget webTarget, int numOfThreads,
+                                   CountDownLatch latch, int intervalStart, int intervalEnd) throws IOException, InterruptedException {
+<span class="nc" id="L85">    ExecutorService executor = Executors.newFixedThreadPool(numOfThreads);</span>
+<span class="nc" id="L86">    ClientConfig clientConfig = new ClientConfig();</span>
+<span class="nc" id="L87">    clientConfig.connectorProvider(new GrizzlyConnectorProvider());</span>
+<span class="nc" id="L88">    Client newClient = ClientBuilder.newClient(clientConfig);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">    for (int i = 0; i &lt; numOfThreads; i++) {</span>
+<span class="nc" id="L90">      executor.execute(new RestThread(REST_URI, client, webTarget, latch,</span>
+          intervalStart, intervalEnd, argumentParser, statistics));
+    }
+<span class="nc" id="L93">    executor.shutdown();</span>
+<span class="nc" id="L94">    executor.awaitTermination(1, TimeUnit.DAYS);</span>
+<span class="nc" id="L95">    return System.currentTimeMillis();</span>
+  }
+
+
+  public void execute() throws InterruptedException, IOException {
+<span class="nc" id="L100">    this.executeFourPhases();</span>
+<span class="nc" id="L101">    statistics.measure();</span>
+<span class="nc" id="L102">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span></div></body></html>

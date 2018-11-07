@@ -1,8 +1,5 @@
 package DistributedSystem_Assignment1;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.JerseyWebTarget;
-
 import java.security.Timestamp;
 import java.util.LinkedList;
 import java.util.List;

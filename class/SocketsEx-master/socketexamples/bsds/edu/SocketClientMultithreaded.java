@@ -43,7 +43,7 @@ public class SocketClientMultithreaded {
             SocketClientThread thread = new SocketClientThread(hostName, port, barrier);
             executor.execute(thread);
         }
-        barrier.await();
+        //barrier.await();
         executor.shutdown();
     }
 }
